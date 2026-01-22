@@ -1,3 +1,6 @@
+type Text = text;
 service : {
   balanceOf: (principal) -> (nat) query;
+  getSymbol: () -> (Text) query;
+  payOut: () -> (text);
 }
