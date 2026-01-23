@@ -35,4 +35,34 @@ actor Token {
             return "Already claimed";
         };
     };
+
+    public shared (msg) func transfer(to : Principal, amount : Nat) : async Text {
+        // call payout first to ensure the caller has a balance
+        let _ = await payOut();
+        let fromBalance : Nat = switch (balances.get(msg.caller)) {
+            case null 0;
+            case (?result) result;
+        };
+        if (fromBalance < amount) {
+            return "Insufficient balance";
+        };
+        let toBalance : Nat = switch (balances.get(to)) {
+            case null 0;
+            case (?result) result;
+        };
+        balances.put(msg.caller, fromBalance - amount);
+        balances.put(to, toBalance + amount);
+        return "Transfer successful";
+    };
+
+    system func preupgrade() {
+        balanceEntries := Iter.toArray(balances.entries());
+    };
+
+    system func postupgrade() {
+        balances := HashMap.fromIter<Principal, Nat>(balanceEntries.vals(), 1, Principal.equal, Principal.hash);
+        if (balances.size() < 1) {
+            balances.put(owner, totalSupply);
+        };
+    };
 };
